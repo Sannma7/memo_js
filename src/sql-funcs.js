@@ -14,10 +14,20 @@ function refreshList() {
         tx.executeSql('SELECT rowid,* FROM TODO', [], function (tx, results) {
             var len = results.rows.length, i;
             for (i = 0; i < len; i++) {
-                msg = "<b>" + results.rows.item(i).title + " " + results.rows.item(i).prograss + "/" + results.rows.item(i).amount + "</b>";
-                $("#status").append(msg);
-                $("#status").append($('<input type="button" value="删除" onclick=deleteData(' + results.rows.item(i).rowid + ')>'));
-                $("#status").append("<br>");
+                var rowId = results.rows.item(i).rowid;
+                $("#status").append($('<div id=status' + rowId + '></div>'));
+                $("#status" + rowId).append(results.rows.item(i).title + "　　　");
+                $("#status" + rowId).append($('<input type= "number" id = "statusPrograss' + 
+                                        rowId + '" style="width:50px" min = 0 max = '+ results.rows.item(i).amount + 
+                                        ' value = ' + results.rows.item(i).prograss + 
+                                        ' onblur = "var num = Number(this.value);if(num>this.max){this.value=this.max;}if(num<this.min)this.value=this.min;">'));
+                $("#status" + rowId).append("/" + results.rows.item(i).amount+ "　　　");
+                $("#status" + rowId).append($('<button id = "statusDel' + 
+                                        rowId + '" onclick=updateData(' + 
+                                        rowId + ')>更新</button>'));
+                $("#status" + rowId).append($('<button id = "statusDel' + 
+                                        rowId + '" onclick=deleteData(' + 
+                                        rowId + ')>删除</button>'));
             }
         }, null);
     });
@@ -26,7 +36,6 @@ function refreshList() {
 function addData() {
     var title = document.getElementById("title").value;
     var amount = document.getElementById("amount").value;
-    var prograss = document.getElementById("prograss").value;
     if (title == "") {
         alertmsg.innerHTML = "No title";
         return;
@@ -35,14 +44,10 @@ function addData() {
         alertmsg.innerHTML = "No amount";
         return;
     }
-    if (prograss == "") {
-        alertmsg.innerHTML = "No prograss";
-        return;
-    }
     db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM TODO WHERE title = ?', [title], function (tx, results) {
             if (results.rows.length == 0) {
-                tx.executeSql('INSERT INTO TODO (title, amount, prograss) VALUES(?, ?, ?)', [title, amount, prograss]);
+                tx.executeSql('INSERT INTO TODO (title, amount, prograss) VALUES(?, ?, ?)', [title, amount, 0]);
                 document.querySelector('#alert').innerHTML = "Success!";
             }
             else {
@@ -53,13 +58,18 @@ function addData() {
     });
 }
 
+function updateData(rowid){
+    var prograss = $("#statusPrograss" + rowid).val();
+    db.transaction(function(tx) {
+        tx.executeSql('UPDATE TODO SET prograss=? WHERE rowid=?',[prograss, rowid]);
+    });
+    document.querySelector('#alert').innerHTML = "updated";
+    refreshList();
+}
+
 function deleteData(rowid) {
     db.transaction(function (tx) {
         tx.executeSql('DELETE FROM TODO WHERE rowid = ?', [rowid]);
     });
     refreshList();
-}
-
-function createInput() {
-    $("status").append($('<input type="button" value="new but" />'));
 }

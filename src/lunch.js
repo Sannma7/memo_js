@@ -6,7 +6,6 @@ var alertmsg = document.getElementById('alert');
 var statusTable = document.getElementById('status');
 
 $(document).ready(function () {
-    createInput();
     createTable();
     refreshList();
 });
